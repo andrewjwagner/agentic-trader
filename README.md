@@ -13,9 +13,11 @@ npm install
 npm run dev
 ```
 
-## After a rebalance
+After a rebalance
 
-Update `src/data/portfolio.ts` (holdings, `lastPrice`, cash, closed trades).
+1. Mark the finishing month `status: "closed"` and set `exitPrice` on each pick (drop `lastPrice`).
+2. Add a new month with `status: "active"` and `lastPrice` baked marks.
+3. Keep only one active month — Refresh prices updates that month only.
 
 ## Deploy
 

@@ -1,5 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
-import { investedCapital, portfolio } from "../data/portfolio";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  activeMonth,
+  closedMonths,
+  closedPickReturnPct,
+  investedCapital,
+  portfolio,
+  type MonthPick,
+} from "../data/portfolio";
 import { fetchQuotes, type QuoteMap } from "./quotes";
 
 export interface PositionMark {
@@ -17,6 +24,18 @@ export interface PositionMark {
   notes?: string;
 }
 
+export interface ClosedPositionMark {
+  monthId: string;
+  monthLabel: string;
+  symbol: string;
+  name: string;
+  entryPrice: number;
+  exitPrice: number;
+  returnPct: number;
+  score: number;
+  sleeve: string;
+}
+
 export interface PortfolioMarks {
   loading: boolean;
   refreshing: boolean;
@@ -28,16 +47,43 @@ export interface PortfolioMarks {
   totalReturnPct: number | null;
   winners: PositionMark[];
   losers: PositionMark[];
+  closedWinners: ClosedPositionMark[];
+  closedLosers: ClosedPositionMark[];
   costBasis: number;
   invested: number;
   liveCount: number;
   source: "live" | "saved" | "mixed" | null;
   refreshedAt: Date | null;
   refreshError: string | null;
+  activeMonthId: string;
+  activeMonthLabel: string;
   refresh: () => Promise<void>;
 }
 
+function markActivePick(h: MonthPick, quotes: QuoteMap): PositionMark {
+  const price = quotes[h.symbol] ?? h.lastPrice ?? h.entryPrice;
+  const cost = h.shares * h.entryPrice;
+  const marketValue = h.shares * price;
+  const pnl = marketValue - cost;
+  const returnPct = cost > 0 ? (pnl / cost) * 100 : null;
+  return {
+    symbol: h.symbol,
+    name: h.name,
+    shares: h.shares,
+    entryPrice: h.entryPrice,
+    price,
+    cost,
+    marketValue,
+    pnl,
+    returnPct,
+    score: h.score,
+    sleeve: h.sleeve,
+    notes: h.notes,
+  };
+}
+
 export function usePortfolioMarks(): PortfolioMarks {
+  const active = activeMonth();
   const [quotes, setQuotes] = useState<QuoteMap>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,7 +97,9 @@ export function usePortfolioMarks(): PortfolioMarks {
     else setLoading(true);
     setRefreshError(null);
     try {
-      const result = await fetchQuotes(portfolio.holdings.map((h) => h.symbol));
+      // Live prices only for the active month.
+      const symbols = activeMonth().picks.map((h) => h.symbol);
+      const result = await fetchQuotes(symbols);
       setQuotes(result.quotes);
       setLiveCount(result.liveCount);
       setSource(result.source);
@@ -77,27 +125,10 @@ export function usePortfolioMarks(): PortfolioMarks {
     await load(true);
   }, [load]);
 
-  const positions: PositionMark[] = portfolio.holdings.map((h) => {
-    const price = quotes[h.symbol] ?? h.lastPrice;
-    const cost = h.shares * h.entryPrice;
-    const marketValue = h.shares * price;
-    const pnl = marketValue - cost;
-    const returnPct = cost > 0 ? (pnl / cost) * 100 : null;
-    return {
-      symbol: h.symbol,
-      name: h.name,
-      shares: h.shares,
-      entryPrice: h.entryPrice,
-      price,
-      cost,
-      marketValue,
-      pnl,
-      returnPct,
-      score: h.score,
-      sleeve: h.sleeve,
-      notes: h.notes,
-    };
-  });
+  const positions = useMemo(
+    () => active.picks.map((h) => markActivePick(h, quotes)),
+    [active.picks, quotes],
+  );
 
   const costBasis = positions.reduce((s, p) => s + p.cost, 0);
   const equityValue = positions.reduce((s, p) => s + (p.marketValue as number), 0);
@@ -115,6 +146,33 @@ export function usePortfolioMarks(): PortfolioMarks {
     .filter((p) => (p.returnPct as number) < 0)
     .sort((a, b) => (a.returnPct as number) - (b.returnPct as number));
 
+  const closedMarks = closedMonths().flatMap((month) =>
+    month.picks.flatMap((pick): ClosedPositionMark[] => {
+      const returnPct = closedPickReturnPct(pick);
+      if (pick.exitPrice == null || returnPct == null) return [];
+      return [
+        {
+          monthId: month.id,
+          monthLabel: month.label,
+          symbol: pick.symbol,
+          name: pick.name,
+          entryPrice: pick.entryPrice,
+          exitPrice: pick.exitPrice,
+          returnPct,
+          score: pick.score,
+          sleeve: pick.sleeve,
+        },
+      ];
+    }),
+  );
+
+  const closedWinners = [...closedMarks]
+    .filter((t) => t.returnPct > 0)
+    .sort((a, b) => b.returnPct - a.returnPct);
+  const closedLosers = [...closedMarks]
+    .filter((t) => t.returnPct < 0)
+    .sort((a, b) => a.returnPct - b.returnPct);
+
   return {
     loading,
     refreshing,
@@ -126,12 +184,16 @@ export function usePortfolioMarks(): PortfolioMarks {
     totalReturnPct,
     winners,
     losers,
+    closedWinners,
+    closedLosers,
     costBasis,
     invested,
     liveCount,
     source,
     refreshedAt,
     refreshError,
+    activeMonthId: active.id,
+    activeMonthLabel: active.label,
     refresh,
   };
 }

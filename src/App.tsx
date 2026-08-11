@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { portfolio } from "./data/portfolio";
-import { formatMoney, formatPct, formatShares } from "./lib/format";
+import { formatMoney, formatPct } from "./lib/format";
 import type { PortfolioMarks } from "./lib/usePortfolioMarks";
 import { HeroChart } from "./components/HeroChart";
+import { MonthPicks } from "./components/MonthPicks";
 
 const fadeUp = {
   initial: { opacity: 0, y: 18 },
@@ -23,21 +24,16 @@ export function App({ marks }: Props) {
     totalReturnPct,
     winners,
     losers,
+    closedWinners,
+    closedLosers,
     invested,
     liveCount,
     source,
     refreshedAt,
     refreshError,
+    activeMonthLabel,
     refresh,
   } = marks;
-
-  const closed = portfolio.closedTrades;
-  const closedWinners = closed
-    .filter((t) => t.returnPct > 0)
-    .sort((a, b) => b.returnPct - a.returnPct);
-  const closedLosers = closed
-    .filter((t) => t.returnPct < 0)
-    .sort((a, b) => a.returnPct - b.returnPct);
 
   return (
     <>
@@ -120,7 +116,8 @@ export function App({ marks }: Props) {
                 <h2 className="section-title">Performance</h2>
                 <p className="section-sub">
                   Account value vs. the ${portfolio.startingCapital.toLocaleString()}{" "}
-                  started on {portfolio.inception}.
+                  started on {portfolio.inception}. Refresh only updates{" "}
+                  {activeMonthLabel}.
                 </p>
               </div>
               <div className="refresh-panel">
@@ -137,7 +134,7 @@ export function App({ marks }: Props) {
                     ? `Updated ${refreshedAt.toLocaleTimeString()}`
                     : "—"}
                   {liveCount > 0
-                    ? ` · ${liveCount}/${portfolio.holdings.length} live`
+                    ? ` · ${liveCount}/${positions.length} live`
                     : null}
                 </p>
                 {refreshError ? (
@@ -197,7 +194,7 @@ export function App({ marks }: Props) {
                     formatPct(totalReturnPct)
                   )}
                 </p>
-                <p className="stat-meta">{portfolio.holdings.length} open positions</p>
+                <p className="stat-meta">{positions.length} open positions</p>
               </div>
             </div>
           </div>
@@ -206,86 +203,16 @@ export function App({ marks }: Props) {
         <section id="picks">
           <div className="shell">
             <div className="section-head">
-              <p className="section-kicker">August 2026</p>
+              <p className="section-kicker">By month</p>
               <h2 className="section-title">Stock picks</h2>
               <p className="section-sub">
-                This month’s choices, scored by the research pass. Use{" "}
-                <strong>Refresh prices</strong> above to pull the latest market
-                marks and return %.
+                Click a column header to sort. Expand a month to see the table —
+                the active month shows live Last prices; closed months show Entry
+                and Exit.
               </p>
             </div>
 
-            <div className="table-wrap">
-              <table className="book">
-                <thead>
-                  <tr>
-                    <th>Symbol</th>
-                    <th>Score</th>
-                    <th>Type</th>
-                    <th className="num">Shares</th>
-                    <th className="num">Entry</th>
-                    <th className="num">Last</th>
-                    <th className="num">Value</th>
-                    <th className="num">Return</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {positions.map((p) => (
-                    <tr key={p.symbol}>
-                      <td>
-                        <span className="sym">{p.symbol}</span>
-                        <span className="sym-name">{p.name}</span>
-                      </td>
-                      <td>
-                        <div className="score-bar">
-                          <div className="score-track">
-                            <div
-                              className="score-fill"
-                              style={{ width: `${p.score}%` }}
-                            />
-                          </div>
-                          <span>{p.score}</span>
-                        </div>
-                      </td>
-                      <td>
-                        {p.sleeve === "politician" ? (
-                          <span className="pill pill-politician">Political</span>
-                        ) : (
-                          <span className="pill">Core</span>
-                        )}
-                      </td>
-                      <td className="num">{formatShares(p.shares)}</td>
-                      <td className="num">{formatMoney(p.entryPrice)}</td>
-                      <td className="num">
-                        {loading ? (
-                          <span className="skeleton" />
-                        ) : p.price != null ? (
-                          formatMoney(p.price)
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="num">
-                        {p.marketValue != null
-                          ? formatMoney(p.marketValue, 0)
-                          : "—"}
-                      </td>
-                      <td className="num">
-                        {p.returnPct == null ? (
-                          "—"
-                        ) : (
-                          <span
-                            className={`delta ${p.returnPct >= 0 ? "pos" : "neg"}`}
-                          >
-                            {formatPct(p.returnPct)}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <MonthPicks positions={positions} loading={loading} />
           </div>
         </section>
 
@@ -295,8 +222,8 @@ export function App({ marks }: Props) {
               <p className="section-kicker">Open marks</p>
               <h2 className="section-title">Winners &amp; losers</h2>
               <p className="section-sub">
-                How this month’s picks are doing so far. Closed winners and losers
-                show up after each month-end refresh.
+                How {activeMonthLabel} is doing so far. Closed months appear below
+                after each rebalance.
               </p>
             </div>
 
@@ -347,16 +274,16 @@ export function App({ marks }: Props) {
               </div>
             </div>
 
-            {closed.length > 0 ? (
+            {closedWinners.length + closedLosers.length > 0 ? (
               <div className="wl-grid" style={{ marginTop: "2.5rem" }}>
                 <div className="wl-col winners">
                   <h3>Closed winners</h3>
                   <ul className="wl-list">
                     {closedWinners.map((t) => (
-                      <li key={`${t.month}-${t.symbol}`}>
+                      <li key={`${t.monthId}-${t.symbol}`}>
                         <span className="sym">
                           {t.symbol}{" "}
-                          <span className="sym-name">{t.month}</span>
+                          <span className="sym-name">{t.monthLabel}</span>
                         </span>
                         <span className="delta pos">{formatPct(t.returnPct)}</span>
                         <span />
@@ -368,10 +295,10 @@ export function App({ marks }: Props) {
                   <h3>Closed losers</h3>
                   <ul className="wl-list">
                     {closedLosers.map((t) => (
-                      <li key={`${t.month}-${t.symbol}`}>
+                      <li key={`${t.monthId}-${t.symbol}`}>
                         <span className="sym">
                           {t.symbol}{" "}
-                          <span className="sym-name">{t.month}</span>
+                          <span className="sym-name">{t.monthLabel}</span>
                         </span>
                         <span className="delta neg">{formatPct(t.returnPct)}</span>
                         <span />

@@ -366,6 +366,106 @@ table.book th {
   white-space: nowrap;
 }
 
+table.book th.num {
+  text-align: right;
+}
+
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.sort-btn:hover,
+.sort-btn.active {
+  color: var(--ink);
+}
+
+.sort-ind {
+  font-size: 0.7rem;
+  opacity: 0.45;
+}
+
+.sort-btn.active .sort-ind {
+  opacity: 0.9;
+  color: var(--teal);
+}
+
+/* ——— Month accordion ——— */
+.month-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.month-block {
+  border: 1px solid var(--line);
+  background: rgba(244, 247, 249, 0.55);
+}
+
+.month-summary {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 1.25rem;
+  padding: 1rem 1.1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.month-summary::-webkit-details-marker {
+  display: none;
+}
+
+.month-summary-main {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.month-chevron {
+  color: var(--teal);
+  font-size: 0.85rem;
+  width: 0.85rem;
+}
+
+.month-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+.month-summary-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+  max-width: 28rem;
+}
+
+.month-body {
+  border-top: 1px solid var(--line);
+}
+
+.month-body .table-wrap {
+  border-top: none;
+  border-bottom: none;
+}
+
+.pill-active {
+  border-color: rgba(10, 110, 106, 0.35);
+  color: var(--teal);
+}
+
 table.book td {
   padding: 0.95rem 0.65rem;
   border-bottom: 1px solid var(--line);
