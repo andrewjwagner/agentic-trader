@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { investedCapital, portfolio } from "../data/portfolio";
 import { fetchQuotes, type QuoteMap } from "./quotes";
 
@@ -19,6 +19,7 @@ export interface PositionMark {
 
 export interface PortfolioMarks {
   loading: boolean;
+  refreshing: boolean;
   quotes: QuoteMap;
   positions: PositionMark[];
   equityValue: number | null;
@@ -29,26 +30,52 @@ export interface PortfolioMarks {
   losers: PositionMark[];
   costBasis: number;
   invested: number;
+  liveCount: number;
+  source: "live" | "saved" | "mixed" | null;
+  refreshedAt: Date | null;
+  refreshError: string | null;
+  refresh: () => Promise<void>;
 }
 
 export function usePortfolioMarks(): PortfolioMarks {
   const [quotes, setQuotes] = useState<QuoteMap>({});
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [liveCount, setLiveCount] = useState(0);
+  const [source, setSource] = useState<"live" | "saved" | "mixed" | null>(null);
+  const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+
+  const load = useCallback(async (isRefresh: boolean) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    setRefreshError(null);
+    try {
+      const result = await fetchQuotes(portfolio.holdings.map((h) => h.symbol));
+      setQuotes(result.quotes);
+      setLiveCount(result.liveCount);
+      setSource(result.source);
+      setRefreshedAt(new Date());
+      if (result.liveCount === 0) {
+        setRefreshError(
+          "Couldn’t reach live prices — showing saved marks. Try again in a moment.",
+        );
+      }
+    } catch {
+      setRefreshError("Refresh failed. Showing the last saved marks.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const map = await fetchQuotes(portfolio.holdings.map((h) => h.symbol));
-      if (!cancelled) {
-        setQuotes(map);
-        setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    void load(false);
+  }, [load]);
+
+  const refresh = useCallback(async () => {
+    await load(true);
+  }, [load]);
 
   const positions: PositionMark[] = portfolio.holdings.map((h) => {
     const price = quotes[h.symbol] ?? h.lastPrice;
@@ -90,6 +117,7 @@ export function usePortfolioMarks(): PortfolioMarks {
 
   return {
     loading,
+    refreshing,
     quotes,
     positions,
     equityValue,
@@ -100,5 +128,10 @@ export function usePortfolioMarks(): PortfolioMarks {
     losers,
     costBasis,
     invested,
+    liveCount,
+    source,
+    refreshedAt,
+    refreshError,
+    refresh,
   };
 }

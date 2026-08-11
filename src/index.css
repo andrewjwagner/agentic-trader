@@ -223,6 +223,47 @@ section {
   margin-bottom: 1.75rem;
 }
 
+.section-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+}
+
+.refresh-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  min-width: 10rem;
+}
+
+.refresh-btn {
+  min-width: 9.5rem;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  transform: none;
+}
+
+.refresh-meta {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+.refresh-error {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--loss);
+  text-align: right;
+  max-width: 16rem;
+}
+
 .section-kicker {
   margin: 0 0 0.4rem;
   font-size: 0.72rem;
@@ -528,6 +569,11 @@ table.book tr:hover td {
   background: var(--gain);
   margin-right: 0.4rem;
   animation: pulse 2s ease infinite;
+}
+
+.live-dot.dim {
+  background: var(--muted);
+  animation: none;
 }
 
 @keyframes pulse {

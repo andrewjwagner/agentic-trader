@@ -16,6 +16,7 @@ interface Props {
 export function App({ marks }: Props) {
   const {
     loading,
+    refreshing,
     positions,
     totalValue,
     totalPnl,
@@ -23,6 +24,11 @@ export function App({ marks }: Props) {
     winners,
     losers,
     invested,
+    liveCount,
+    source,
+    refreshedAt,
+    refreshError,
+    refresh,
   } = marks;
 
   const closed = portfolio.closedTrades;
@@ -103,16 +109,41 @@ export function App({ marks }: Props) {
       <main>
         <section id="performance">
           <div className="shell">
-            <div className="section-head">
-              <p className="section-kicker">
-                <span className="live-dot" />
-                Live marks
-              </p>
-              <h2 className="section-title">Performance</h2>
-              <p className="section-sub">
-                Account value vs. the ${portfolio.startingCapital.toLocaleString()}{" "}
-                started on {portfolio.inception}.
-              </p>
+            <div className="section-head section-head-row">
+              <div>
+                <p className="section-kicker">
+                  <span className={`live-dot ${source === "saved" ? "dim" : ""}`} />
+                  {source === "live" || source === "mixed"
+                    ? "Live marks"
+                    : "Saved marks"}
+                </p>
+                <h2 className="section-title">Performance</h2>
+                <p className="section-sub">
+                  Account value vs. the ${portfolio.startingCapital.toLocaleString()}{" "}
+                  started on {portfolio.inception}.
+                </p>
+              </div>
+              <div className="refresh-panel">
+                <button
+                  type="button"
+                  className="btn btn-ghost refresh-btn"
+                  onClick={() => void refresh()}
+                  disabled={loading || refreshing}
+                >
+                  {refreshing ? "Refreshing…" : "Refresh prices"}
+                </button>
+                <p className="refresh-meta">
+                  {refreshedAt
+                    ? `Updated ${refreshedAt.toLocaleTimeString()}`
+                    : "—"}
+                  {liveCount > 0
+                    ? ` · ${liveCount}/${portfolio.holdings.length} live`
+                    : null}
+                </p>
+                {refreshError ? (
+                  <p className="refresh-error">{refreshError}</p>
+                ) : null}
+              </div>
             </div>
 
             <div className="stat-row">
@@ -178,9 +209,9 @@ export function App({ marks }: Props) {
               <p className="section-kicker">August 2026</p>
               <h2 className="section-title">Stock picks</h2>
               <p className="section-sub">
-                This month’s choices, scored by the research pass. Prices refresh
-                when live quotes are available; otherwise the last saved mark is
-                shown.
+                This month’s choices, scored by the research pass. Use{" "}
+                <strong>Refresh prices</strong> above to pull the latest market
+                marks and return %.
               </p>
             </div>
 
