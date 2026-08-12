@@ -13,11 +13,15 @@ npm install
 npm run dev
 ```
 
-After a rebalance
+## After a rebalance
 
-1. Mark the finishing month `status: "closed"` and set `exitPrice` on each pick (drop `lastPrice`).
+1. Mark the finishing month `status: "closed"`, set `exitPrice` on each pick (drop `lastPrice`), and optionally set `endNav` (account value at close) for future multi-month vs-S&P stitching.
 2. Add a new month with `status: "active"` and `lastPrice` baked marks.
-3. Keep only one active month — Refresh prices updates that month only.
+3. Keep only one active month — **Refresh prices** updates that month’s live marks and reloads daily SPY + pick history for the comparison chart.
+
+## Benchmark
+
+The Performance chart indexes **Agentic Trader** and **S&P 500 (SPY)** to 100 at inception. SPY is price return only (not dividend-adjusted). Both lines use the same trading days since `portfolio.inception`.
 
 ## Deploy
 

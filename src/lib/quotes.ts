@@ -103,6 +103,116 @@ function remapToPortfolioSymbols(
   return out;
 }
 
+export type HistoryBar = {
+  /** ISO date YYYY-MM-DD (UTC calendar day of the bar). */
+  date: string;
+  close: number;
+};
+
+type ChartHistoryPayload = {
+  chart?: {
+    result?: {
+      timestamp?: number[];
+      indicators?: { quote?: { close?: (number | null)[] }[] };
+    }[];
+  };
+};
+
+function formatUtcDate(ts: number): string {
+  return new Date(ts * 1000).toISOString().slice(0, 10);
+}
+
+function parseDailyHistory(json: unknown): HistoryBar[] {
+  const result = (json as ChartHistoryPayload)?.chart?.result?.[0];
+  const timestamps = result?.timestamp ?? [];
+  const closes = result?.indicators?.quote?.[0]?.close ?? [];
+  const bars: HistoryBar[] = [];
+  for (let i = 0; i < timestamps.length; i++) {
+    const close = closes[i];
+    if (typeof close !== "number" || !Number.isFinite(close)) continue;
+    bars.push({ date: formatUtcDate(timestamps[i]), close });
+  }
+  return bars;
+}
+
+function yahooHistoryUrl(symbol: string, period1: number, period2: number): string {
+  const ysym = yahooSymbol(symbol);
+  return `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ysym)}?interval=1d&period1=${period1}&period2=${period2}`;
+}
+
+async function fetchDailyHistoryDirect(
+  symbol: string,
+  period1: number,
+  period2: number,
+): Promise<HistoryBar[]> {
+  const ysym = yahooSymbol(symbol);
+  const path = `/api/yahoo/v8/finance/chart/${encodeURIComponent(ysym)}?interval=1d&period1=${period1}&period2=${period2}`;
+  try {
+    const res = await fetch(path);
+    if (!res.ok) return [];
+    return parseDailyHistory(await res.json());
+  } catch {
+    return [];
+  }
+}
+
+async function fetchDailyHistoryAllOrigins(
+  symbol: string,
+  period1: number,
+  period2: number,
+): Promise<HistoryBar[]> {
+  const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(
+    yahooHistoryUrl(symbol, period1, period2),
+  )}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    return parseDailyHistory(await res.json());
+  } catch {
+    return [];
+  }
+}
+
+/** Daily OHLCV closes for one symbol from period1 → period2 (unix seconds). */
+export async function fetchDailyHistory(
+  symbol: string,
+  period1: number,
+  period2: number,
+): Promise<HistoryBar[]> {
+  const direct = await fetchDailyHistoryDirect(symbol, period1, period2);
+  if (direct.length > 0) return direct;
+  return fetchDailyHistoryAllOrigins(symbol, period1, period2);
+}
+
+/**
+ * Fetch daily histories for many symbols with a small concurrency cap.
+ * Missing / failed symbols are omitted from the map (do not fail the batch).
+ */
+export async function fetchDailyHistories(
+  symbols: string[],
+  period1: number,
+  period2: number,
+  concurrency = 4,
+): Promise<Record<string, HistoryBar[]>> {
+  const unique = [...new Set(symbols)];
+  const out: Record<string, HistoryBar[]> = {};
+
+  for (let i = 0; i < unique.length; i += concurrency) {
+    const batch = unique.slice(i, i + concurrency);
+    const results = await Promise.all(
+      batch.map(async (symbol) => {
+        const bars = await fetchDailyHistory(symbol, period1, period2);
+        return [symbol, bars] as const;
+      }),
+    );
+    for (const [symbol, bars] of results) {
+      if (bars.length > 0) out[symbol] = bars;
+    }
+  }
+
+  return out;
+}
+
 /**
  * Fetch live quotes (batched Yahoo spark via local proxy or allorigins).
  * Fill gaps with baked lastPrice so the UI never goes blank.

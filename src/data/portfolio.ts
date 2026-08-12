@@ -28,6 +28,11 @@ export interface MonthBook {
   status: "active" | "closed";
   picks: MonthPick[];
   summary?: string;
+  /**
+   * Closed months only: account NAV at month-end rebalance.
+   * Used later to stitch multi-month vs-S&P history.
+   */
+  endNav?: number;
 }
 
 export interface PortfolioSnapshot {

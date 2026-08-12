@@ -4,6 +4,7 @@ import { formatMoney, formatPct } from "./lib/format";
 import type { PortfolioMarks } from "./lib/usePortfolioMarks";
 import { HeroChart } from "./components/HeroChart";
 import { MonthPicks } from "./components/MonthPicks";
+import { VsSpyChart } from "./components/VsSpyChart";
 
 const fadeUp = {
   initial: { opacity: 0, y: 18 },
@@ -32,6 +33,12 @@ export function App({ marks }: Props) {
     refreshedAt,
     refreshError,
     activeMonthLabel,
+    comparisonSeries,
+    vsSpyPct,
+    portfolioBenchReturnPct,
+    spyReturnPct,
+    historyLoading,
+    historyError,
     refresh,
   } = marks;
 
@@ -116,8 +123,9 @@ export function App({ marks }: Props) {
                 <h2 className="section-title">Performance</h2>
                 <p className="section-sub">
                   Account value vs. the ${portfolio.startingCapital.toLocaleString()}{" "}
-                  started on {portfolio.inception}. Refresh only updates{" "}
-                  {activeMonthLabel}.
+                  started on {portfolio.inception}. Chart compares to the S&amp;P 500
+                  (SPY) over the same period. Refresh updates {activeMonthLabel}{" "}
+                  marks and the benchmark history.
                 </p>
               </div>
               <div className="refresh-panel">
@@ -196,7 +204,40 @@ export function App({ marks }: Props) {
                 </p>
                 <p className="stat-meta">{positions.length} open positions</p>
               </div>
+              <div className="stat">
+                <p className="stat-label">Vs S&amp;P 500</p>
+                <p
+                  className={`stat-value ${
+                    vsSpyPct == null ? "" : vsSpyPct >= 0 ? "pos" : "neg"
+                  }`}
+                >
+                  {historyLoading && vsSpyPct == null ? (
+                    <span className="skeleton" />
+                  ) : vsSpyPct == null ? (
+                    "—"
+                  ) : (
+                    formatPct(vsSpyPct)
+                  )}
+                </p>
+                <p className="stat-meta">
+                  {vsSpyPct == null
+                    ? "Indexed since inception"
+                    : vsSpyPct >= 0
+                      ? "Ahead of SPY"
+                      : "Behind SPY"}
+                </p>
+              </div>
             </div>
+
+            <VsSpyChart
+              series={comparisonSeries}
+              loading={historyLoading}
+              error={historyError}
+              vsSpyPct={vsSpyPct}
+              portfolioReturnPct={portfolioBenchReturnPct}
+              spyReturnPct={spyReturnPct}
+              inception={portfolio.inception}
+            />
           </div>
         </section>
 
@@ -351,7 +392,7 @@ export function App({ marks }: Props) {
           {portfolio.brand} {portfolio.credit} · Started {portfolio.inception} ·
           Not investment advice
         </span>
-        <span>Tracked in public · Marks from market data when available</span>
+        <span>Tracked in public · Marks from market data when available · Benchmark SPY (price)</span>
       </footer>
     </>
   );
