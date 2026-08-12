@@ -220,14 +220,16 @@ export const portfolio: PortfolioSnapshot = {
   ],
   strategy: {
     assets: 15,
-    holdPeriod: "About one month, then pick again",
+    holdPeriod: "About one month by default; strong picks can be held longer",
     universe: "Big U.S. stocks and regular ETFs (no leveraged products)",
     process:
-      "Each month it reviews the market, drops picks that no longer make sense, and chooses a fresh set of about 15 stocks.",
+      "At month-end it sells what no longer fits, then buys the new lineup on the 1st so cash has time to settle. Each position targets roughly equal weight (~6.67% of deployable capital).",
     rules: [
       "Keeps at least $250 in cash — never all-in",
       "Any gains get parked in a long-term SPY safety net",
       "Two slots come from recent political stock trades",
+      "Up to five positions can be extended when the thesis still holds",
+      "One order per stock per rebalance — no duplicate placements",
       "Won’t repurchase a loser within 30 days (wash-sale guard)",
       "No leveraged, inverse, or volatility products",
     ],
