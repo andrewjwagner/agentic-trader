@@ -9,7 +9,7 @@ import {
   type MonthPick,
 } from "../data/portfolio";
 import type { ComparisonPoint, ComparisonResult } from "./benchmark";
-import { fetchMarketDataJson, fetchQuotes, type QuoteMap } from "./quotes";
+import { fetchMarketDataJson, type QuoteMap } from "./quotes";
 
 export interface PositionMark {
   symbol: string;
@@ -180,25 +180,19 @@ export function usePortfolioMarks(): PortfolioMarks {
     setRefreshing(true);
     setRefreshError(null);
     try {
-      const symbols = activeMonth().picks.map((h) => h.symbol);
-      const result = await fetchQuotes(symbols);
-      setQuotes(result.quotes);
-      setLiveCount(result.liveCount);
-      setSource(result.source);
-      setRefreshedAt(new Date());
-      if (result.liveCount === 0) {
-        setRefreshError(
-          "Live refresh timed out or failed — showing saved marks. Snapshot data may still apply.",
-        );
+      const snapshot = await fetchMarketDataJson(true);
+      if (!snapshot) {
+        setRefreshError("Couldn't reload price snapshot — try again in a moment.");
+        return;
       }
-      // Re-fetch snapshot for updated chart series (fast single JSON request).
-      await loadSnapshot();
+      applySnapshot(snapshot);
+      setRefreshedAt(new Date());
     } catch {
       setRefreshError("Refresh failed. Showing the last saved marks.");
     } finally {
       setRefreshing(false);
     }
-  }, [loadSnapshot]);
+  }, [applySnapshot]);
 
   const positions = useMemo(
     () => active.picks.map((h) => markActivePick(h, quotes)),

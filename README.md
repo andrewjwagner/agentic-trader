@@ -17,7 +17,17 @@ npm run dev
 
 1. Mark the finishing month `status: "closed"`, set `exitPrice` on each pick (drop `lastPrice`), and optionally set `endNav` (account value at close) for future multi-month vs-S&P stitching.
 2. Add a new month with `status: "active"` and `lastPrice` baked marks.
-3. Keep only one active month — **Refresh prices** updates that month’s live marks and reloads daily SPY + pick history for the comparison chart.
+3. Keep only one active month — **Refresh prices** reloads the latest `public/market-data.json` snapshot (fast; no browser-side Yahoo scraping).
+
+## Market data (prices + chart)
+
+Prices are baked into `public/market-data.json` at build time and refreshed hourly on weekdays via GitHub Actions.
+
+**Recommended:** add a free [Finnhub](https://finnhub.io) API key as repo secret `FINNHUB_API_KEY` so CI can fetch quotes reliably (Yahoo rate-limits heavily).
+
+```bash
+npm run fetch-market-data   # local; respects FINNHUB_API_KEY env var
+```
 
 ## Benchmark
 

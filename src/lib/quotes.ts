@@ -25,9 +25,12 @@ export type MarketDataSnapshot = {
 
 const MARKET_DATA_URL = `${import.meta.env.BASE_URL}market-data.json`;
 
-export async function fetchMarketDataJson(): Promise<MarketDataSnapshot | null> {
+export async function fetchMarketDataJson(
+  cacheBust = false,
+): Promise<MarketDataSnapshot | null> {
   try {
-    const res = await fetch(MARKET_DATA_URL, { cache: "no-cache" });
+    const url = cacheBust ? `${MARKET_DATA_URL}?t=${Date.now()}` : MARKET_DATA_URL;
+    const res = await fetch(url, { cache: "no-cache" });
     if (!res.ok) return null;
     const data = (await res.json()) as MarketDataSnapshot;
     if (!data?.quotes || !data.fetchedAt) return null;
@@ -241,13 +244,9 @@ export async function fetchDailyHistories(
   return out;
 }
 
-const REFRESH_TIMEOUT_MS = 3000;
+const REFRESH_TIMEOUT_MS = 8000;
 
-/**
- * Fetch live quotes (batched Yahoo spark via local proxy or allorigins).
- * Fill gaps with baked lastPrice so the UI never goes blank.
- * Used by the Refresh button only — not on initial page load.
- */
+/** @deprecated Client-side live Yahoo is unreliable on static hosting; prefer fetchMarketDataJson. */
 export async function fetchQuotes(symbols: string[]): Promise<QuoteFetchResult> {
   const unique = [...new Set(symbols)];
   const baked = bakedQuotes();

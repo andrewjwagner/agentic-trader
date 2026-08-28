@@ -128,8 +128,8 @@ export function App({ marks }: Props) {
                 <p className="section-sub">
                   Account value vs. the ${portfolio.startingCapital.toLocaleString()}{" "}
                   started on {portfolio.inception}. Chart compares to the S&amp;P 500
-                  (SPY) over the same period. Refresh updates {activeMonthLabel}{" "}
-                  marks and the benchmark history.
+                  (SPY) over the same period. Refresh reloads the latest price snapshot
+                  (updated on deploy and hourly on weekdays).
                 </p>
               </div>
               <div className="refresh-panel">

@@ -20,6 +20,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run fetch-market-data
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
       - name: Commit updated snapshot if changed
         run: |
           git config user.name "github-actions[bot]"
