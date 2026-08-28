@@ -1,4 +1,5 @@
 import { bakedQuotes, yahooSymbol } from "../data/portfolio";
+import type { ComparisonPoint } from "./benchmark";
 
 export type QuoteMap = Record<string, number>;
 
@@ -8,6 +9,33 @@ export type QuoteFetchResult = {
   liveCount: number;
   source: "live" | "saved" | "mixed";
 };
+
+/** Pre-baked market snapshot written by scripts/fetch-market-data.ts in CI. */
+export type MarketDataSnapshot = {
+  fetchedAt: string;
+  quotes: QuoteMap;
+  liveCount: number;
+  comparisonSeries: ComparisonPoint[];
+  vsSpyPct: number | null;
+  portfolioReturnPct: number | null;
+  spyReturnPct: number | null;
+  startDate: string | null;
+  endDate: string | null;
+};
+
+const MARKET_DATA_URL = `${import.meta.env.BASE_URL}market-data.json`;
+
+export async function fetchMarketDataJson(): Promise<MarketDataSnapshot | null> {
+  try {
+    const res = await fetch(MARKET_DATA_URL, { cache: "no-cache" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as MarketDataSnapshot;
+    if (!data?.quotes || !data.fetchedAt) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
 
 type SparkPayload = {
   spark?: {
@@ -213,34 +241,49 @@ export async function fetchDailyHistories(
   return out;
 }
 
+const REFRESH_TIMEOUT_MS = 3000;
+
 /**
  * Fetch live quotes (batched Yahoo spark via local proxy or allorigins).
  * Fill gaps with baked lastPrice so the UI never goes blank.
+ * Used by the Refresh button only — not on initial page load.
  */
 export async function fetchQuotes(symbols: string[]): Promise<QuoteFetchResult> {
   const unique = [...new Set(symbols)];
   const baked = bakedQuotes();
 
-  let live = remapToPortfolioSymbols(await fetchSparkDirect(unique), unique);
-  if (Object.keys(live).length === 0) {
-    live = remapToPortfolioSymbols(await fetchSparkAllOrigins(unique), unique);
-  }
-
-  // Fill any missing names with a per-symbol chart call (e.g. odd tickers).
-  const missing = unique.filter((s) => live[s] == null);
-  if (missing.length > 0 && missing.length <= 6) {
-    const extras = await Promise.all(
-      missing.map(async (symbol) => [symbol, await fetchChartAllOrigins(symbol)] as const),
-    );
-    for (const [symbol, price] of extras) {
-      if (price != null) live[symbol] = price;
+  const fetchLive = async (): Promise<QuoteFetchResult> => {
+    let live = remapToPortfolioSymbols(await fetchSparkDirect(unique), unique);
+    if (Object.keys(live).length === 0) {
+      live = remapToPortfolioSymbols(await fetchSparkAllOrigins(unique), unique);
     }
+
+    const missing = unique.filter((s) => live[s] == null);
+    if (missing.length > 0 && missing.length <= 6) {
+      const extras = await Promise.all(
+        missing.map(async (symbol) => [symbol, await fetchChartAllOrigins(symbol)] as const),
+      );
+      for (const [symbol, price] of extras) {
+        if (price != null) live[symbol] = price;
+      }
+    }
+
+    const map: QuoteMap = { ...baked, ...live };
+    const liveCount = unique.filter((s) => live[s] != null).length;
+    const source =
+      liveCount === 0 ? "saved" : liveCount === unique.length ? "live" : "mixed";
+
+    return { quotes: map, liveCount, source };
+  };
+
+  try {
+    return await Promise.race([
+      fetchLive(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), REFRESH_TIMEOUT_MS),
+      ),
+    ]);
+  } catch {
+    return { quotes: baked, liveCount: 0, source: "saved" };
   }
-
-  const map: QuoteMap = { ...baked, ...live };
-  const liveCount = unique.filter((s) => live[s] != null).length;
-  const source =
-    liveCount === 0 ? "saved" : liveCount === unique.length ? "live" : "mixed";
-
-  return { quotes: map, liveCount, source };
 }

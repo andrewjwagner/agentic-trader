@@ -1,20 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   activeMonth,
+  bakedQuotes,
   closedMonths,
   closedPickReturnPct,
   investedCapital,
   portfolio,
   type MonthPick,
 } from "../data/portfolio";
-import {
-  buildComparisonSeries,
-  inceptionToUnix,
-  nowUnix,
-  type ComparisonPoint,
-  type ComparisonResult,
-} from "./benchmark";
-import { fetchDailyHistories, fetchQuotes, type QuoteMap } from "./quotes";
+import type { ComparisonPoint, ComparisonResult } from "./benchmark";
+import { fetchMarketDataJson, fetchQuotes, type QuoteMap } from "./quotes";
 
 export interface PositionMark {
   symbol: string;
@@ -59,8 +54,9 @@ export interface PortfolioMarks {
   costBasis: number;
   invested: number;
   liveCount: number;
-  source: "live" | "saved" | "mixed" | null;
+  source: "live" | "saved" | "mixed" | "snapshot" | null;
   refreshedAt: Date | null;
+  snapshotFetchedAt: Date | null;
   refreshError: string | null;
   activeMonthId: string;
   activeMonthLabel: string;
@@ -104,96 +100,105 @@ const emptyComparison: ComparisonResult = {
   endDate: null,
 };
 
+function comparisonFromSnapshot(
+  series: ComparisonPoint[],
+  vsSpyPct: number | null,
+  portfolioReturnPct: number | null,
+  spyReturnPct: number | null,
+): ComparisonResult {
+  if (series.length === 0) return emptyComparison;
+  return {
+    series,
+    vsSpyPct,
+    portfolioReturnPct,
+    spyReturnPct,
+    startDate: series[0]?.date ?? null,
+    endDate: series[series.length - 1]?.date ?? null,
+  };
+}
+
 export function usePortfolioMarks(): PortfolioMarks {
   const active = activeMonth();
-  const [quotes, setQuotes] = useState<QuoteMap>({});
-  const [loading, setLoading] = useState(true);
+  const initialQuotes = useMemo(() => bakedQuotes(), []);
+
+  const [quotes, setQuotes] = useState<QuoteMap>(initialQuotes);
   const [refreshing, setRefreshing] = useState(false);
   const [liveCount, setLiveCount] = useState(0);
-  const [source, setSource] = useState<"live" | "saved" | "mixed" | null>(null);
+  const [source, setSource] = useState<"live" | "saved" | "mixed" | "snapshot" | null>(
+    "saved",
+  );
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
+  const [snapshotFetchedAt, setSnapshotFetchedAt] = useState<Date | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [comparison, setComparison] = useState<ComparisonResult>(emptyComparison);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState<string | null>(null);
 
-  const loadHistory = useCallback(async () => {
+  const applySnapshot = useCallback((snapshot: Awaited<ReturnType<typeof fetchMarketDataJson>>) => {
+    if (!snapshot) return false;
+
+    setQuotes((prev) => ({ ...prev, ...snapshot.quotes }));
+    setLiveCount(snapshot.liveCount);
+    setSource(snapshot.liveCount > 0 ? "snapshot" : "saved");
+    setSnapshotFetchedAt(new Date(snapshot.fetchedAt));
+
+    const nextComparison = comparisonFromSnapshot(
+      snapshot.comparisonSeries ?? [],
+      snapshot.vsSpyPct,
+      snapshot.portfolioReturnPct,
+      snapshot.spyReturnPct,
+    );
+    setComparison(nextComparison);
+    if (nextComparison.series.length === 0) {
+      setHistoryError("Not enough price history yet to chart vs S&P 500.");
+    } else {
+      setHistoryError(null);
+    }
+    return true;
+  }, []);
+
+  const loadSnapshot = useCallback(async () => {
     setHistoryLoading(true);
     setHistoryError(null);
     try {
-      const month = activeMonth();
-      const period1 = inceptionToUnix(portfolio.inception);
-      const period2 = nowUnix();
-      const symbols = ["SPY", ...month.picks.map((p) => p.symbol)];
-      const histories = await fetchDailyHistories(symbols, period1, period2, 4);
-      const spyHistory = histories.SPY ?? [];
-      if (spyHistory.length === 0) {
-        setComparison(emptyComparison);
-        setHistoryError(
-          "Couldn’t load S&P 500 history. Try Refresh prices again in a moment.",
-        );
-        return;
-      }
-      const pickHistories: Record<string, typeof spyHistory> = {};
-      for (const pick of month.picks) {
-        if (histories[pick.symbol]) pickHistories[pick.symbol] = histories[pick.symbol];
-      }
-      const result = buildComparisonSeries({
-        startingCapital: portfolio.startingCapital,
-        cashApprox: portfolio.cashApprox,
-        picks: month.picks,
-        spyHistory,
-        pickHistories,
-      });
-      setComparison(result);
-      if (result.series.length === 0) {
-        setHistoryError("Not enough price history yet to chart vs S&P 500.");
+      const snapshot = await fetchMarketDataJson();
+      if (!applySnapshot(snapshot)) {
+        setHistoryError("Couldn’t load market snapshot — showing saved marks.");
       }
     } catch {
-      setComparison(emptyComparison);
-      setHistoryError("Benchmark history failed to load.");
+      setHistoryError("Market snapshot failed to load.");
     } finally {
       setHistoryLoading(false);
     }
-  }, []);
-
-  const load = useCallback(
-    async (isRefresh: boolean) => {
-      if (isRefresh) setRefreshing(true);
-      else setLoading(true);
-      setRefreshError(null);
-      try {
-        const symbols = activeMonth().picks.map((h) => h.symbol);
-        const [result] = await Promise.all([
-          fetchQuotes(symbols),
-          loadHistory(),
-        ]);
-        setQuotes(result.quotes);
-        setLiveCount(result.liveCount);
-        setSource(result.source);
-        setRefreshedAt(new Date());
-        if (result.liveCount === 0) {
-          setRefreshError(
-            "Couldn’t reach live prices — showing saved marks. Try again in a moment.",
-          );
-        }
-      } catch {
-        setRefreshError("Refresh failed. Showing the last saved marks.");
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [loadHistory],
-  );
+  }, [applySnapshot]);
 
   useEffect(() => {
-    void load(false);
-  }, [load]);
+    void loadSnapshot();
+  }, [loadSnapshot]);
 
   const refresh = useCallback(async () => {
-    await load(true);
-  }, [load]);
+    setRefreshing(true);
+    setRefreshError(null);
+    try {
+      const symbols = activeMonth().picks.map((h) => h.symbol);
+      const result = await fetchQuotes(symbols);
+      setQuotes(result.quotes);
+      setLiveCount(result.liveCount);
+      setSource(result.source);
+      setRefreshedAt(new Date());
+      if (result.liveCount === 0) {
+        setRefreshError(
+          "Live refresh timed out or failed — showing saved marks. Snapshot data may still apply.",
+        );
+      }
+      // Re-fetch snapshot for updated chart series (fast single JSON request).
+      await loadSnapshot();
+    } catch {
+      setRefreshError("Refresh failed. Showing the last saved marks.");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadSnapshot]);
 
   const positions = useMemo(
     () => active.picks.map((h) => markActivePick(h, quotes)),
@@ -244,7 +249,7 @@ export function usePortfolioMarks(): PortfolioMarks {
     .sort((a, b) => a.returnPct - b.returnPct);
 
   return {
-    loading,
+    loading: false,
     refreshing,
     quotes,
     positions,
@@ -261,6 +266,7 @@ export function usePortfolioMarks(): PortfolioMarks {
     liveCount,
     source,
     refreshedAt,
+    snapshotFetchedAt,
     refreshError,
     activeMonthId: active.id,
     activeMonthLabel: active.label,

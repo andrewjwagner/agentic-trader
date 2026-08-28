@@ -17,7 +17,6 @@ interface Props {
 
 export function App({ marks }: Props) {
   const {
-    loading,
     refreshing,
     positions,
     totalValue,
@@ -31,6 +30,7 @@ export function App({ marks }: Props) {
     liveCount,
     source,
     refreshedAt,
+    snapshotFetchedAt,
     refreshError,
     activeMonthLabel,
     comparisonSeries,
@@ -115,10 +115,14 @@ export function App({ marks }: Props) {
             <div className="section-head section-head-row">
               <div>
                 <p className="section-kicker">
-                  <span className={`live-dot ${source === "saved" ? "dim" : ""}`} />
+                  <span
+                    className={`live-dot ${source === "saved" || source === null ? "dim" : ""}`}
+                  />
                   {source === "live" || source === "mixed"
                     ? "Live marks"
-                    : "Saved marks"}
+                    : source === "snapshot"
+                      ? "Snapshot marks"
+                      : "Saved marks"}
                 </p>
                 <h2 className="section-title">Performance</h2>
                 <p className="section-sub">
@@ -133,14 +137,16 @@ export function App({ marks }: Props) {
                   type="button"
                   className="btn btn-ghost refresh-btn"
                   onClick={() => void refresh()}
-                  disabled={loading || refreshing}
+                  disabled={refreshing || historyLoading}
                 >
                   {refreshing ? "Refreshing…" : "Refresh prices"}
                 </button>
                 <p className="refresh-meta">
                   {refreshedAt
-                    ? `Updated ${refreshedAt.toLocaleTimeString()}`
-                    : "—"}
+                    ? `Live refresh ${refreshedAt.toLocaleTimeString()}`
+                    : snapshotFetchedAt
+                      ? `Snapshot ${snapshotFetchedAt.toLocaleString()}`
+                      : "—"}
                   {liveCount > 0
                     ? ` · ${liveCount}/${positions.length} live`
                     : null}
@@ -155,7 +161,7 @@ export function App({ marks }: Props) {
               <div className="stat">
                 <p className="stat-label">Total value</p>
                 <p className="stat-value">
-                  {loading || totalValue == null ? (
+                  {totalValue == null ? (
                     <span className="skeleton" />
                   ) : (
                     formatMoney(totalValue, 0)
@@ -177,7 +183,7 @@ export function App({ marks }: Props) {
                     totalPnl == null ? "" : totalPnl >= 0 ? "pos" : "neg"
                   }`}
                 >
-                  {loading || totalPnl == null ? (
+                  {totalPnl == null ? (
                     <span className="skeleton" />
                   ) : (
                     formatMoney(totalPnl, 0)
@@ -196,7 +202,7 @@ export function App({ marks }: Props) {
                         : "neg"
                   }`}
                 >
-                  {loading || totalReturnPct == null ? (
+                  {totalReturnPct == null ? (
                     <span className="skeleton" />
                   ) : (
                     formatPct(totalReturnPct)
@@ -253,7 +259,7 @@ export function App({ marks }: Props) {
               </p>
             </div>
 
-            <MonthPicks positions={positions} loading={loading} />
+            <MonthPicks positions={positions} loading={false} />
           </div>
         </section>
 
@@ -272,9 +278,7 @@ export function App({ marks }: Props) {
               <div className="wl-col winners">
                 <h3>Winners</h3>
                 {winners.length === 0 ? (
-                  <p className="wl-empty">
-                    {loading ? "Pulling marks…" : "No winners yet this month."}
-                  </p>
+                  <p className="wl-empty">No winners yet this month.</p>
                 ) : (
                   <ul className="wl-list">
                     {winners.slice(0, 5).map((p) => (
@@ -294,9 +298,7 @@ export function App({ marks }: Props) {
               <div className="wl-col losers">
                 <h3>Losers</h3>
                 {losers.length === 0 ? (
-                  <p className="wl-empty">
-                    {loading ? "Pulling marks…" : "No losers yet this month."}
-                  </p>
+                  <p className="wl-empty">No losers yet this month.</p>
                 ) : (
                   <ul className="wl-list">
                     {losers.slice(0, 5).map((p) => (

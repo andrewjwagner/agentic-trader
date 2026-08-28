@@ -1,0 +1,27 @@
+{
+  "fetchedAt": "2026-08-28T16:18:45.986Z",
+  "quotes": {
+    "PLTR": 174.67,
+    "NVDA": 223.03,
+    "GS": 1043.77,
+    "LLY": 1197.11,
+    "JPM": 358.68,
+    "AMZN": 275.71,
+    "BRK.B": 536.72,
+    "MSFT": 504.78,
+    "CEG": 269.07,
+    "LMT": 600.99,
+    "IT": 187.64,
+    "GOOGL": 353.76,
+    "CVX": 192.05,
+    "SPCX": 131.65,
+    "MNST": 46.015
+  },
+  "liveCount": 0,
+  "comparisonSeries": [],
+  "vsSpyPct": null,
+  "portfolioReturnPct": null,
+  "spyReturnPct": null,
+  "startDate": null,
+  "endDate": null
+}
