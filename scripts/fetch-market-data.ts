@@ -13,6 +13,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   activeMonth,
+  allPickSymbols,
   bakedQuotes,
   portfolio,
   yahooSymbol,
@@ -275,19 +276,20 @@ async function main() {
 
   const period1 = inceptionToUnix(portfolio.inception);
   const period2 = nowUnix();
-  const historySymbols = ["SPY", ...pickSymbols];
+  const historySymbols = ["SPY", ...allPickSymbols()];
   const histories = await fetchHistories(historySymbols, period1, period2);
 
   const spyHistory = histories.SPY ?? [];
   const pickHistories: Record<string, HistoryBar[]> = {};
-  for (const pick of month.picks) {
-    if (histories[pick.symbol]) pickHistories[pick.symbol] = histories[pick.symbol];
+  for (const symbol of allPickSymbols()) {
+    if (histories[symbol]) pickHistories[symbol] = histories[symbol];
   }
 
   const comparison = buildComparisonSeries({
     startingCapital: portfolio.startingCapital,
     cashApprox: portfolio.cashApprox,
-    picks: month.picks,
+    months: portfolio.months,
+    inception: portfolio.inception,
     spyHistory,
     pickHistories,
   });

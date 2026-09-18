@@ -15,7 +15,7 @@ npm run dev
 
 ## After a rebalance
 
-1. Mark the finishing month `status: "closed"`, set `exitPrice` on each pick (drop `lastPrice`), and optionally set `endNav` (account value at close) for future multi-month vs-S&P stitching.
+1. Mark the finishing month `status: "closed"`, set `exitPrice` on each pick (drop `lastPrice`), set `startDate` / `cashApprox`, and optionally set `endNav` (account value at close). The vs-S&P chart switches holdings on each month's `startDate`.
 2. Add a new month with `status: "active"` and `lastPrice` baked marks.
 3. Keep only one active month — **Refresh prices** reloads the latest `public/market-data.json` snapshot (fast; no browser-side Yahoo scraping).
 
