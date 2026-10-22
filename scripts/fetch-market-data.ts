@@ -6,9 +6,16 @@
  * 1. Finnhub — if FINNHUB_API_KEY env var is set (recommended; free at finnhub.io)
  * 2. Yahoo Finance — fallback with rate-limit aware retries
  *
+ * Both of the above are unreliable for *history* on CI (Yahoo rate-limits,
+ * Finnhub's free tier 403s on candles), so history always starts from
+ * `src/data/baked-history.json` — a manually-refreshed daily-close seed
+ * pulled from a brokerage API outside this pipeline — and live/fallback
+ * bars are layered on top of it per date. See README.md ("Market data")
+ * for how to refresh it.
+ *
  * Run: npm run fetch-market-data
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -27,7 +34,27 @@ import type { HistoryBar } from "../src/lib/quotes";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = join(__dirname, "../public/market-data.json");
+const BAKED_HISTORY_PATH = join(__dirname, "../src/data/baked-history.json");
 const FINNHUB_KEY = process.env.FINNHUB_API_KEY?.trim() || "";
+
+function loadBakedHistory(): Record<string, HistoryBar[]> {
+  try {
+    return JSON.parse(readFileSync(BAKED_HISTORY_PATH, "utf8"));
+  } catch (err) {
+    console.warn("No baked history seed found:", err);
+    return {};
+  }
+}
+
+/** Baked bars first, live bars override same-date baked bars, sorted by date. */
+function mergeHistory(baked: HistoryBar[], live: HistoryBar[]): HistoryBar[] {
+  const byDate = new Map<string, number>();
+  for (const bar of baked) byDate.set(bar.date, bar.close);
+  for (const bar of live) byDate.set(bar.date, bar.close);
+  return [...byDate.entries()]
+    .map(([date, close]) => ({ date, close }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
 
 const YAHOO_HOST = "https://query1.finance.yahoo.com";
 
@@ -272,17 +299,37 @@ async function main() {
     );
   }
 
-  const { quotes, liveCount } = await fetchQuotes(pickSymbols, baked);
+  const historySymbols = ["SPY", ...allPickSymbols()];
+
+  // Quotes for the active book's picks (unchanged shape for the frontend),
+  // plus a separate SPY quote so today's bar can be appended below even
+  // when the history APIs themselves are unavailable.
+  const { quotes: allQuotes, liveCount } = await fetchQuotes(
+    [...new Set(historySymbols)],
+    baked,
+  );
+  const quotes: QuoteMap = {};
+  for (const symbol of pickSymbols) quotes[symbol] = allQuotes[symbol];
+  const spyQuote = allQuotes.SPY;
 
   const period1 = inceptionToUnix(portfolio.inception);
   const period2 = nowUnix();
-  const historySymbols = ["SPY", ...allPickSymbols()];
-  const histories = await fetchHistories(historySymbols, period1, period2);
+  const bakedHistory = loadBakedHistory();
+  const liveHistories = await fetchHistories(historySymbols, period1, period2);
+  const today = new Date().toISOString().slice(0, 10);
 
-  const spyHistory = histories.SPY ?? [];
+  const historyFor = (symbol: string, liveQuote?: number): HistoryBar[] => {
+    let bars = mergeHistory(bakedHistory[symbol] ?? [], liveHistories[symbol] ?? []);
+    if (liveQuote != null && !bars.some((b) => b.date === today)) {
+      bars = [...bars, { date: today, close: liveQuote }];
+    }
+    return bars;
+  };
+
+  const spyHistory = historyFor("SPY", spyQuote);
   const pickHistories: Record<string, HistoryBar[]> = {};
   for (const symbol of allPickSymbols()) {
-    if (histories[symbol]) pickHistories[symbol] = histories[symbol];
+    pickHistories[symbol] = historyFor(symbol, allQuotes[symbol]);
   }
 
   const comparison = buildComparisonSeries({

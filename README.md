@@ -23,11 +23,13 @@ npm run dev
 
 Prices are baked into `public/market-data.json` at build time and refreshed hourly on weekdays via GitHub Actions.
 
-**Recommended:** add a free [Finnhub](https://finnhub.io) API key as repo secret `FINNHUB_API_KEY` so CI can fetch quotes reliably (Yahoo rate-limits heavily).
+**Recommended:** add a free [Finnhub](https://finnhub.io) API key as repo secret `FINNHUB_API_KEY` so CI can fetch quotes reliably (Yahoo rate-limits heavily). Live quotes work on Finnhub's free tier, but **historical candles do not** (403 on the free plan) — Yahoo's chart endpoint is also commonly rate-limited from CI. So the vs-S&P chart's daily history comes from `src/data/baked-history.json` instead, a plain `{symbol: [{date, close}, ...]}` seed, with any live-fetched bars layered on top per date when they're available. Each CI run also appends today's bar from the live quote it *does* get, so the series stays current even when the history APIs are fully down.
 
 ```bash
 npm run fetch-market-data   # local; respects FINNHUB_API_KEY env var
 ```
+
+**Refreshing `baked-history.json`:** since neither free API reliably serves history, refresh this file periodically (e.g. as part of the monthly rebalance run, which already has reliable brokerage API access) by pulling daily closes for `SPY` + every symbol in `allPickSymbols()` since `portfolio.inception`, merging by date (new data wins), and committing the result. This is the same kind of baked-snapshot discipline the rest of this site's data already uses (`lastPrice` on picks, `market-data.json` on deploy) — nothing new conceptually, just applied to history instead of point-in-time quotes.
 
 ## Benchmark
 
