@@ -1,4 +1,8 @@
-import type { MonthPick } from "../data/portfolio";
+import {
+  monthStartDate,
+  type MonthBook,
+  type MonthPick,
+} from "../data/portfolio";
 import type { HistoryBar } from "./quotes";
 
 export type ComparisonPoint = {
@@ -51,18 +55,59 @@ export function nowUnix(): number {
   return Math.floor(Date.now() / 1000) + 86400; // include today
 }
 
+function bookOnDate(
+  date: string,
+  months: MonthBook[],
+  inception: string,
+): MonthBook | null {
+  if (months.length === 0) return null;
+  const chronological = [...months].sort((a, b) =>
+    monthStartDate(a, inception, months).localeCompare(
+      monthStartDate(b, inception, months),
+    ),
+  );
+  let current: MonthBook | null = null;
+  for (const month of chronological) {
+    if (monthStartDate(month, inception, months) <= date) current = month;
+    else break;
+  }
+  return current;
+}
+
+function mapsForPicks(
+  picks: MonthPick[],
+  pickHistories: Record<string, HistoryBar[]>,
+): { pick: MonthPick; map: Map<string, number> }[] {
+  return picks.map((p) => ({
+    pick: p,
+    map: barsToMap(pickHistories[p.symbol] ?? []),
+  }));
+}
+
 /**
  * Build aligned SPY vs portfolio series indexed to 100 at the first
  * trading day on/after inception where both sides can be valued.
+ * Pass `months` to switch holdings on each rebalance date; otherwise
+ * the single `picks` book is valued across the whole window.
  */
 export function buildComparisonSeries(args: {
   startingCapital: number;
   cashApprox: number;
-  picks: MonthPick[];
+  picks?: MonthPick[];
+  months?: MonthBook[];
+  inception?: string;
   spyHistory: HistoryBar[];
   pickHistories: Record<string, HistoryBar[]>;
 }): ComparisonResult {
-  const { startingCapital, cashApprox, picks, spyHistory, pickHistories } = args;
+  const {
+    startingCapital,
+    cashApprox,
+    picks,
+    months,
+    inception = "1970-01-01",
+    spyHistory,
+    pickHistories,
+  } = args;
   const empty: ComparisonResult = {
     series: [],
     portfolioReturnPct: null,
@@ -72,13 +117,19 @@ export function buildComparisonSeries(args: {
     endDate: null,
   };
 
-  if (spyHistory.length === 0 || picks.length === 0) return empty;
+  const fallbackPicks = picks ?? months?.find((m) => m.status === "active")?.picks ?? [];
+  if (spyHistory.length === 0 || (fallbackPicks.length === 0 && !months?.length)) {
+    return empty;
+  }
 
   const spyMap = barsToMap(spyHistory);
-  const pickMaps = picks.map((p) => ({
-    pick: p,
-    map: barsToMap(pickHistories[p.symbol] ?? []),
-  }));
+  const monthMaps = new Map<string, { pick: MonthPick; map: Map<string, number> }[]>();
+  if (months && months.length > 0) {
+    for (const month of months) {
+      monthMaps.set(month.id, mapsForPicks(month.picks, pickHistories));
+    }
+  }
+  const singleMaps = mapsForPicks(fallbackPicks, pickHistories);
 
   // Prefer SPY trading calendar as the spine.
   const dates = spyHistory.map((b) => b.date).sort();
@@ -91,6 +142,13 @@ export function buildComparisonSeries(args: {
     const spyClose = spyMap.get(date);
     if (spyClose == null) continue;
 
+    const book =
+      months && months.length > 0 ? bookOnDate(date, months, inception) : null;
+    if (months && months.length > 0 && !book) continue;
+    const pickMaps = book ? (monthMaps.get(book.id) ?? []) : singleMaps;
+    const cash = book?.cashApprox ?? cashApprox;
+    if (pickMaps.length === 0) continue;
+
     let equity = 0;
     let priced = 0;
     for (const { pick, map } of pickMaps) {
@@ -100,11 +158,11 @@ export function buildComparisonSeries(args: {
       priced += 1;
     }
     // Need at least half the book marked to avoid a junk early NAV.
-    if (priced < Math.ceil(picks.length / 2)) continue;
+    if (priced < Math.ceil(pickMaps.length / 2)) continue;
 
     raw.push({
       date,
-      portfolioValue: cashApprox + equity,
+      portfolioValue: cash + equity,
       spyValue: spyClose, // scale after we know start
     });
   }
