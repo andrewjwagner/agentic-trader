@@ -398,10 +398,11 @@ export function App({ marks }: Props) {
               <p className="section-kicker">Background reading</p>
               <h2 className="section-title">The AI build-out stack</h2>
               <p className="section-sub">
-                Three layers of one multi-year thesis, read bottom-up: the power
-                grid that has to exist first, the compute it feeds, and the
-                robotics wave riding on top of both. Tickers are illustrative
-                examples of each theme, not a screened or scored list.
+                Three layers of one multi-year thesis, read top to bottom: the
+                robotics wave riding on top of the compute it depends on, which
+                in turn depends on the power grid at the foundation. Tickers
+                are illustrative examples of each theme, not a screened or
+                scored list.
               </p>
             </div>
 
