@@ -5,6 +5,7 @@ import type { PortfolioMarks } from "./lib/usePortfolioMarks";
 import { HeroChart } from "./components/HeroChart";
 import { MonthPicks } from "./components/MonthPicks";
 import { VsSpyChart } from "./components/VsSpyChart";
+import { ResearchStack } from "./components/ResearchStack";
 
 const fadeUp = {
   initial: { opacity: 0, y: 18 },
@@ -58,6 +59,9 @@ export function App({ marks }: Props) {
           </li>
           <li>
             <a href="#strategy">Strategy</a>
+          </li>
+          <li>
+            <a href="#research">Research</a>
           </li>
         </ul>
       </nav>
@@ -385,6 +389,30 @@ export function App({ marks }: Props) {
                 </li>
               ))}
             </ol>
+          </div>
+        </section>
+
+        <section id="research">
+          <div className="shell">
+            <div className="section-head">
+              <p className="section-kicker">Background reading</p>
+              <h2 className="section-title">The AI build-out stack</h2>
+              <p className="section-sub">
+                Three layers of one multi-year thesis, read bottom-up: the power
+                grid that has to exist first, the compute it feeds, and the
+                robotics wave riding on top of both. Tickers are illustrative
+                examples of each theme, not a screened or scored list.
+              </p>
+            </div>
+
+            <ResearchStack />
+
+            <p className="research-note">
+              <b>Pure research &amp; understanding.</b> This section is for
+              background study of a market theme. It is not a shortlist, not a
+              score, and not connected to the monthly rebalance shown above
+              — nothing here feeds a trade.
+            </p>
           </div>
         </section>
       </main>
