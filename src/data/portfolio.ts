@@ -357,7 +357,7 @@ export const portfolio: PortfolioSnapshot = {
   tagline:
     "An AI stock picker that chooses about 15 stocks each month from macro news and recent political trades, starting with $3,000, tracked in public.",
   inception: "2026-08-10",
-  asOf: "2026-09-18",
+  asOf: "2026-10-22",
   startingCapital: 3000,
   cashApprox: 250,
   cashFloor: 250,
@@ -370,7 +370,7 @@ export const portfolio: PortfolioSnapshot = {
       cashApprox: 250,
       picks: september2026Picks,
       summary:
-        "Cycle 2 — energy/healthcare rotation on Sep 14. Friday 9/18 check held all 15; no emergency sells.",
+        "Cycle 2 — energy/healthcare rotation on Sep 14. Friday 9/18 check held all 15; no emergency sells. Oct 22 review: thesis intact across all 15, no changes — held through October.",
     },
     {
       id: "2026-08",
