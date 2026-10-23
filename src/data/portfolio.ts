@@ -391,7 +391,7 @@ export const portfolio: PortfolioSnapshot = {
       "At each monthly rebalance it sells what no longer fits, then buys the new lineup the same day. Each position targets roughly equal weight (~6.67% of deployable capital).",
     rules: [
       "Keeps at least $250 in cash — never all-in",
-      "Any gains get parked in a long-term SPY safety net",
+      "Holdings get rechecked between rebalances — hold is the default, only a broken thesis triggers an early exit",
       "Two slots come from recent political stock trades",
       "Up to five positions can be extended when the thesis still holds",
       "One order per stock per rebalance — no duplicate placements",
