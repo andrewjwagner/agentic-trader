@@ -1,9 +1,10 @@
 interface Leg {
-  id: "power" | "compute" | "robotics";
+  id: "power" | "compute" | "robotics" | "security";
   name: string;
   timeframe: string;
   thesis: string;
   role: string;
+  crossCutting?: boolean;
   tickers: { symbol: string; name: string }[];
 }
 
@@ -11,9 +12,9 @@ const legs: Leg[] = [
   {
     id: "power",
     name: "Power & Grid",
-    timeframe: "bottleneck now → 2030+",
+    timeframe: "acute bottleneck now → ~2028",
     thesis:
-      "The foundation layer. Every forecast for AI/data-center capex (estimates cluster around $1.6T–$3T by 2030) converges on the same constraint: not capital, but electricity. This layer gets re-rated hard on any hyperscaler capex-guidance news, even when its own fundamentals haven't changed.",
+      "The foundation layer. The power crunch isn't a future event — grid interconnection queues are already multi-year in many regions, and that's the live constraint on how fast data centers can actually get built, not a 2030 milestone. (The $1.6T–$3T-by-2030 figures floating around are cumulative capex totals, not when the bottleneck itself bites.) This layer gets re-rated hard on any hyperscaler capex-guidance news, even when its own fundamentals haven't changed.",
     role: "The hard physical ceiling on how fast the compute layer above can actually build.",
     tickers: [
       { symbol: "CEG", name: "Constellation — nuclear" },
@@ -21,6 +22,11 @@ const legs: Leg[] = [
       { symbol: "NEE", name: "NextEra — utility/renewables" },
       { symbol: "GEV", name: "GE Vernova — grid equipment" },
       { symbol: "ETN", name: "Eaton — electrical infrastructure" },
+      { symbol: "NRG", name: "NRG Energy — power generation" },
+      { symbol: "CCJ", name: "Cameco — uranium/nuclear fuel" },
+      { symbol: "XLU", name: "Utilities Select Sector SPDR (ETF)" },
+      { symbol: "ICLN", name: "iShares Global Clean Energy (ETF)" },
+      { symbol: "URA", name: "Global X Uranium (ETF)" },
     ],
   },
   {
@@ -34,59 +40,95 @@ const legs: Leg[] = [
       { symbol: "NVDA", name: "Nvidia — AI accelerators" },
       { symbol: "AVGO", name: "Broadcom — custom silicon/networking" },
       { symbol: "TSM", name: "TSMC — foundry" },
-      { symbol: "AMD", name: "AMD — accelerators/CPUs" },
       { symbol: "MU", name: "Micron — HBM/DRAM" },
       { symbol: "LRCX", name: "Lam Research — fab equipment" },
-      { symbol: "ASML", name: "ASML — lithography" },
       { symbol: "MSFT", name: "Microsoft — hyperscaler/capex" },
       { symbol: "GOOGL", name: "Alphabet — hyperscaler/capex" },
-      { symbol: "AMZN", name: "Amazon — AWS/capex" },
-      { symbol: "META", name: "Meta — capex/model training" },
-      { symbol: "ORCL", name: "Oracle — cloud/AI infra" },
+      { symbol: "SMH", name: "VanEck Semiconductor (ETF)" },
+      { symbol: "SOXX", name: "iShares Semiconductor (ETF)" },
+      { symbol: "XLK", name: "Technology Select Sector SPDR (ETF)" },
     ],
   },
   {
     id: "robotics",
     name: "Robotics & Automation",
-    timeframe: "early, inflection ~2027+",
+    timeframe: "earliest signals ~2027, mainstream likely 2030s",
     thesis:
-      "The newest, smallest layer — riding on the same AI models and compute below it, but years behind on revenue. 2030 market estimates for humanoid robotics alone cluster at roughly $6B–$19B, a rounding error next to >$1T/yr of data-center spend.",
-    role: "Mainstream adoption reads as a late-2020s-into-2030s story — worth tracking, not yet sized like the layers below it.",
+      "The newest, smallest physical layer — riding on the same AI models and compute below it, but years behind on revenue. 2027 is when early commercial/regulatory signals are expected to clear (per ABI Research), not when this goes mainstream: 2030 market estimates for humanoid robotics alone still cluster at only $6B–$19B, a rounding error next to >$1T/yr of data-center spend — meaning even by 2030 this is still early, not investable at scale.",
+    role: "A real but later wave riding on the other legs' compute — worth tracking now, but the mainstream-adoption horizon likely sits in the 2030s, not 2027.",
     tickers: [
       { symbol: "TSLA", name: "Tesla — Optimus humanoid" },
       { symbol: "ISRG", name: "Intuitive Surgical — medical robotics" },
       { symbol: "ROK", name: "Rockwell Automation — industrial automation" },
-      { symbol: "ABB", name: "ABB — industrial/collaborative robots" },
       { symbol: "HON", name: "Honeywell — automation/robotics" },
-      { symbol: "SYM", name: "Symbotic — warehouse robotics" },
+      { symbol: "FANUY", name: "Fanuc — pure-play industrial robots" },
+      { symbol: "CGNX", name: "Cognex — machine vision" },
+      { symbol: "PATH", name: "UiPath — software automation (RPA)" },
+      { symbol: "BOTZ", name: "Global X Robotics & AI (ETF)" },
+      { symbol: "ROBO", name: "ROBO Global Robotics & Automation (ETF)" },
+      { symbol: "ARKQ", name: "ARK Autonomous Tech & Robotics (ETF)" },
+    ],
+  },
+  {
+    id: "security",
+    name: "Security & Trust Infrastructure",
+    timeframe: "cross-cutting, now → ongoing",
+    crossCutting: true,
+    thesis:
+      "Not a physical dependency layer like the three above — a leg that cuts across all of them. More compute, more autonomous systems, and more grid-connected infrastructure each expand the attack surface, and AI itself is now both a security buyer (agentic-identity, data, and cloud protection) and a tool vendors sell with.",
+    role: "Scales with the other three legs rather than sitting on top of any one of them — datacenter security, cloud/zero-trust, and AI-agent identity all grow as the rest of the stack grows.",
+    tickers: [
+      { symbol: "CRWD", name: "CrowdStrike — endpoint/cloud security" },
+      { symbol: "PANW", name: "Palo Alto Networks — network security" },
+      { symbol: "ZS", name: "Zscaler — zero-trust cloud security" },
+      { symbol: "FTNT", name: "Fortinet — network security" },
+      { symbol: "S", name: "SentinelOne — AI-driven endpoint security" },
+      { symbol: "OKTA", name: "Okta — identity & access management" },
+      { symbol: "NET", name: "Cloudflare — network/zero-trust infra" },
+      { symbol: "CIBR", name: "First Trust Cybersecurity (ETF)" },
+      { symbol: "HACK", name: "ETFMG Prime Cyber Security (ETF)" },
+      { symbol: "BUG", name: "Global X Cybersecurity (ETF)" },
     ],
   },
 ];
 
+const stackLegs = legs.filter((l) => !l.crossCutting).slice().reverse();
+const crossCuttingLegs = legs.filter((l) => l.crossCutting);
+
+function Band({ leg }: { leg: Leg }) {
+  return (
+    <div className="stack-band" data-leg={leg.id}>
+      <div className="stack-band-head">
+        <span className="stack-leg-name">{leg.name}</span>
+        <span className="pill stack-timeframe">{leg.timeframe}</span>
+      </div>
+      <p className="stack-thesis">{leg.thesis}</p>
+      <div className="stack-tickers">
+        {leg.tickers.map((t) => (
+          <span className="stack-chip" key={t.symbol}>
+            <span className="stack-chip-sym">{t.symbol}</span>
+            <span className="stack-chip-name">{t.name}</span>
+          </span>
+        ))}
+      </div>
+      <p className="stack-role">{leg.role}</p>
+    </div>
+  );
+}
+
 export function ResearchStack() {
   return (
-    <div className="stack">
-      {legs
-        .slice()
-        .reverse()
-        .map((leg) => (
-          <div className="stack-band" data-leg={leg.id} key={leg.id}>
-            <div className="stack-band-head">
-              <span className="stack-leg-name">{leg.name}</span>
-              <span className="pill stack-timeframe">{leg.timeframe}</span>
-            </div>
-            <p className="stack-thesis">{leg.thesis}</p>
-            <div className="stack-tickers">
-              {leg.tickers.map((t) => (
-                <span className="stack-chip" key={t.symbol}>
-                  <span className="stack-chip-sym">{t.symbol}</span>
-                  <span className="stack-chip-name">{t.name}</span>
-                </span>
-              ))}
-            </div>
-            <p className="stack-role">{leg.role}</p>
-          </div>
+    <>
+      {crossCuttingLegs.map((leg) => (
+        <div className="stack-cross" key={leg.id}>
+          <Band leg={leg} />
+        </div>
+      ))}
+      <div className="stack">
+        {stackLegs.map((leg) => (
+          <Band leg={leg} key={leg.id} />
         ))}
-    </div>
+      </div>
+    </>
   );
 }

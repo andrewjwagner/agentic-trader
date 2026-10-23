@@ -396,13 +396,15 @@ export function App({ marks }: Props) {
           <div className="shell">
             <div className="section-head">
               <p className="section-kicker">Background reading</p>
-              <h2 className="section-title">The AI build-out stack</h2>
+              <h2 className="section-title">The AI Build-out Thesis</h2>
               <p className="section-sub">
-                Three layers of one multi-year thesis, read top to bottom: the
-                robotics wave riding on top of the compute it depends on, which
-                in turn depends on the power grid at the foundation. Tickers
-                are illustrative examples of each theme, not a screened or
-                scored list.
+                Four legs of one multi-year thesis. Three stack top to bottom
+                as a physical dependency chain: robotics rides on the compute
+                it depends on, which depends on the power grid at the
+                foundation. The fourth, security, cuts across all three rather
+                than sitting on top of any one of them. Tickers are
+                illustrative examples of each theme (now 10 per leg, including
+                2–3 ETFs), not a screened or scored list.
               </p>
             </div>
 

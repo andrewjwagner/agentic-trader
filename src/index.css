@@ -744,11 +744,32 @@ table.book tr:hover td {
 }
 
 /* ——— Research stack ——— */
+.stack-cross {
+  margin-top: 1.5rem;
+  padding-bottom: 1.25rem;
+  position: relative;
+}
+
+.stack-cross::after {
+  content: "cuts across all three layers below";
+  display: block;
+  margin-top: 0.75rem;
+  padding-left: 1.25rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stack-cross .stack-band {
+  border-style: dashed;
+}
+
 .stack {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  margin-top: 1.5rem;
+  margin-top: 0.75rem;
   border-left: 1px dashed var(--line);
   padding-left: 1.25rem;
 }
@@ -783,6 +804,10 @@ table.book tr:hover td {
   --stack-dot: #6a4fb0;
 }
 
+.stack-band[data-leg="security"] {
+  --stack-dot: #b4231c;
+}
+
 .stack-band-head {
   display: flex;
   flex-wrap: wrap;
@@ -809,6 +834,10 @@ table.book tr:hover td {
 
 .stack-band[data-leg="robotics"] .stack-leg-name {
   color: #6a4fb0;
+}
+
+.stack-band[data-leg="security"] .stack-leg-name {
+  color: #b4231c;
 }
 
 .stack-timeframe {
@@ -854,6 +883,10 @@ table.book tr:hover td {
 
 .stack-band[data-leg="robotics"] .stack-chip-sym {
   color: #6a4fb0;
+}
+
+.stack-band[data-leg="security"] .stack-chip-sym {
+  color: #b4231c;
 }
 
 .stack-chip-name {
