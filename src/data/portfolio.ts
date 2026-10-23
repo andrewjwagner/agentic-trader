@@ -393,7 +393,7 @@ export const portfolio: PortfolioSnapshot = {
       "Keeps at least $250 in cash — never all-in",
       "Holdings get rechecked between rebalances — hold is the default, only a broken thesis triggers an early exit",
       "Two slots come from recent political stock trades",
-      "Up to five positions can be extended when the thesis still holds",
+      "No cap on extended holds — each one re-earns its slot against the fresh scan every cycle",
       "One order per stock per rebalance — no duplicate placements",
       "Won’t repurchase a loser within 30 days (wash-sale guard)",
       "No leveraged, inverse, or volatility products",
