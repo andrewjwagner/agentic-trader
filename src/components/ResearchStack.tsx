@@ -12,9 +12,9 @@ const legs: Leg[] = [
   {
     id: "power",
     name: "Power & Grid",
-    timeframe: "bottleneck now → 2030+",
+    timeframe: "acute bottleneck now → ~2028",
     thesis:
-      "The foundation layer. Every forecast for AI/data-center capex (estimates cluster around $1.6T–$3T by 2030) converges on the same constraint: not capital, but electricity. This layer gets re-rated hard on any hyperscaler capex-guidance news, even when its own fundamentals haven't changed.",
+      "The foundation layer. The power crunch isn't a future event — grid interconnection queues are already multi-year in many regions, and that's the live constraint on how fast data centers can actually get built, not a 2030 milestone. (The $1.6T–$3T-by-2030 figures floating around are cumulative capex totals, not when the bottleneck itself bites.) This layer gets re-rated hard on any hyperscaler capex-guidance news, even when its own fundamentals haven't changed.",
     role: "The hard physical ceiling on how fast the compute layer above can actually build.",
     tickers: [
       { symbol: "CEG", name: "Constellation — nuclear" },
@@ -52,10 +52,10 @@ const legs: Leg[] = [
   {
     id: "robotics",
     name: "Robotics & Automation",
-    timeframe: "early, inflection ~2027+",
+    timeframe: "earliest signals ~2027, mainstream likely 2030s",
     thesis:
-      "The newest, smallest physical layer — riding on the same AI models and compute below it, but years behind on revenue. 2030 market estimates for humanoid robotics alone cluster at roughly $6B–$19B, a rounding error next to >$1T/yr of data-center spend.",
-    role: "Mainstream adoption reads as a late-2020s-into-2030s story — worth tracking, not yet sized like the layers below it.",
+      "The newest, smallest physical layer — riding on the same AI models and compute below it, but years behind on revenue. 2027 is when early commercial/regulatory signals are expected to clear (per ABI Research), not when this goes mainstream: 2030 market estimates for humanoid robotics alone still cluster at only $6B–$19B, a rounding error next to >$1T/yr of data-center spend — meaning even by 2030 this is still early, not investable at scale.",
+    role: "A real but later wave riding on the other legs' compute — worth tracking now, but the mainstream-adoption horizon likely sits in the 2030s, not 2027.",
     tickers: [
       { symbol: "TSLA", name: "Tesla — Optimus humanoid" },
       { symbol: "ISRG", name: "Intuitive Surgical — medical robotics" },
