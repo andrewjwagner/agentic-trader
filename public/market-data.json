@@ -1,21 +1,21 @@
 {
-  "fetchedAt": "2026-10-26T19:45:44.606Z",
+  "fetchedAt": "2026-10-26T23:35:54.646Z",
   "quotes": {
-    "CVX": 231.66,
-    "LLY": 1277.36,
-    "COP": 151.31,
-    "LMT": 632.59,
-    "XOM": 183.89,
-    "JPM": 334.45,
-    "GOOGL": 316.98,
-    "MRK": 140.47,
-    "SPCX": 147.98,
-    "NOW": 157.44,
-    "PLTR": 199.55,
-    "MSFT": 532.42,
-    "GS": 894.75,
-    "BRK.B": 547.68,
-    "IT": 230.82
+    "CVX": 232.01,
+    "LLY": 1279.14,
+    "COP": 151.37,
+    "LMT": 635.2,
+    "XOM": 184.54,
+    "JPM": 334.04,
+    "GOOGL": 316.8,
+    "MRK": 140.61,
+    "SPCX": 146.9,
+    "NOW": 158.18,
+    "PLTR": 198.84,
+    "MSFT": 532.6,
+    "GS": 893.28,
+    "BRK.B": 548.56,
+    "IT": 231.03
   },
   "liveCount": 20,
   "comparisonSeries": [
@@ -489,17 +489,17 @@
     },
     {
       "date": "2026-10-26",
-      "portfolioIndex": 103.20692015812496,
-      "spyIndex": 99.04660879914104,
-      "portfolioValue": 3096.2076047437486,
-      "spyValue": 2971.398263974231,
-      "portfolioReturnPct": 3.2069201581249587,
-      "spyReturnPct": -0.9533912008589596
+      "portfolioIndex": 103.25068897543032,
+      "spyIndex": 99.00909408431757,
+      "portfolioValue": 3097.52066926291,
+      "spyValue": 2970.272822529527,
+      "portfolioReturnPct": 3.2506889754303216,
+      "spyReturnPct": -0.9909059156824327
     }
   ],
-  "vsSpyPct": 4.160311358983918,
-  "portfolioReturnPct": 3.2069201581249587,
-  "spyReturnPct": -0.9533912008589596,
+  "vsSpyPct": 4.241594891112754,
+  "portfolioReturnPct": 3.2506889754303216,
+  "spyReturnPct": -0.9909059156824327,
   "startDate": "2026-08-10",
   "endDate": "2026-10-26"
 }
