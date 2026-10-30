@@ -932,7 +932,6 @@ table.book tr:hover td {
   font-size: 0.86rem;
   line-height: 1.55;
   color: var(--ink-soft);
-  max-width: 62ch;
 }
 
 .stack-tickers {

@@ -112,7 +112,7 @@ const legs: Leg[] = [
       { symbol: "DNA", name: "Twist Bioscience — synthetic DNA synthesis" },
       { symbol: "ILMN", name: "Illumina — genomic sequencing (the data layer)" },
       { symbol: "IQV", name: "IQVIA — CRO using AI for trial design/recruitment" },
-      { symbol: "CRL", name: "Charles River Labs — AI-assisted preclinical testing" },
+      { symbol: "LLY", name: "Eli Lilly — ~$1B NVIDIA lab, Chai/Profluent/Insilico AI deals" },
       { symbol: "XBI", name: "SPDR S&P Biotech (ETF)" },
       { symbol: "ARKG", name: "ARK Genomic Revolution (ETF)" },
     ],
