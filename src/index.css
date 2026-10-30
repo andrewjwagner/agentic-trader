@@ -820,6 +820,25 @@ table.book tr:hover td {
   border-style: dashed;
 }
 
+.stack-standalone {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  position: relative;
+}
+
+.stack-standalone::before {
+  content: "separate thesis — not part of the build-out stack above";
+  display: block;
+  margin-bottom: 0.75rem;
+  padding-left: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+
 .stack {
   display: flex;
   flex-direction: column;
@@ -863,6 +882,10 @@ table.book tr:hover td {
   --stack-dot: #b4231c;
 }
 
+.stack-band[data-leg="biotech"] {
+  --stack-dot: #2f7a4f;
+}
+
 .stack-band-head {
   display: flex;
   flex-wrap: wrap;
@@ -893,6 +916,10 @@ table.book tr:hover td {
 
 .stack-band[data-leg="security"] .stack-leg-name {
   color: #b4231c;
+}
+
+.stack-band[data-leg="biotech"] .stack-leg-name {
+  color: #2f7a4f;
 }
 
 .stack-timeframe {
@@ -942,6 +969,10 @@ table.book tr:hover td {
 
 .stack-band[data-leg="security"] .stack-chip-sym {
   color: #b4231c;
+}
+
+.stack-band[data-leg="biotech"] .stack-chip-sym {
+  color: #2f7a4f;
 }
 
 .stack-chip-name {

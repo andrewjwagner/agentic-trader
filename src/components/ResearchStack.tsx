@@ -1,10 +1,15 @@
 interface Leg {
-  id: "power" | "compute" | "robotics" | "security";
+  id: "power" | "compute" | "robotics" | "security" | "biotech";
   name: string;
   timeframe: string;
   thesis: string;
   role: string;
+  /** Cuts across all three physical-buildout layers (power/compute/robotics). */
   crossCutting?: boolean;
+  /** A separate AI-acceleration thesis, not part of the physical buildout
+   * dependency chain and not "scaling with" it the way crossCutting legs do —
+   * rendered as its own group below the stack instead of inside it. */
+  standalone?: boolean;
   tickers: { symbol: string; name: string }[];
 }
 
@@ -90,10 +95,36 @@ const legs: Leg[] = [
       { symbol: "BUG", name: "Global X Cybersecurity (ETF)" },
     ],
   },
+  {
+    id: "biotech",
+    name: "Biotech & Healthcare",
+    timeframe: "early signal now, Phase I only → broad clinical impact likely 2030s",
+    standalone: true,
+    thesis:
+      "A separate AI-acceleration thesis, not a layer of the physical build-out above — this one runs on model capability, not power/compute/robotics infrastructure. The signal is real but narrow so far: a widely-cited 2024 Drug Discovery Today analysis found AI-discovered molecules hit an 80-90% Phase I success rate versus a 40-65% historical baseline, but Phase II success for the same molecules was ~40%, in line with historical norms — the advantage hasn't yet been shown to persist past the earliest trial stage. Cost-reduction claims vary widely by source (15-60% depending on what's measured) and aren't independently verified; take vendor figures like Insilico's reported ~$6M discovery cost for one candidate as a single-company claim, not a sector norm. The baseline this is chipping away at: Tufts estimates ~$2.6B in fully-loaded cost per approved drug, with an 11.83% clinical success rate overall — so even a narrow, early-stage edge compounds meaningfully if it holds.",
+    role:
+      "Independent of the power/compute/robotics stack above — worth tracking on its own, with the same caution: a documented Phase I edge is not yet a documented Phase II/III edge, and most cost-savings figures circulating in 2026 are unverified.",
+    tickers: [
+      { symbol: "RXRX", name: "Recursion Pharmaceuticals — AI-native drug discovery" },
+      { symbol: "TEM", name: "Tempus AI — AI diagnostics/trial-matching data" },
+      { symbol: "SDGR", name: "Schrödinger — physics/AI molecular design" },
+      { symbol: "ABSI", name: "Absci — generative AI protein/antibody design" },
+      { symbol: "DNA", name: "Twist Bioscience — synthetic DNA synthesis" },
+      { symbol: "ILMN", name: "Illumina — genomic sequencing (the data layer)" },
+      { symbol: "IQV", name: "IQVIA — CRO using AI for trial design/recruitment" },
+      { symbol: "CRL", name: "Charles River Labs — AI-assisted preclinical testing" },
+      { symbol: "XBI", name: "SPDR S&P Biotech (ETF)" },
+      { symbol: "ARKG", name: "ARK Genomic Revolution (ETF)" },
+    ],
+  },
 ];
 
-const stackLegs = legs.filter((l) => !l.crossCutting).slice().reverse();
+const stackLegs = legs
+  .filter((l) => !l.crossCutting && !l.standalone)
+  .slice()
+  .reverse();
 const crossCuttingLegs = legs.filter((l) => l.crossCutting);
+const standaloneLegs = legs.filter((l) => l.standalone);
 
 function Band({ leg }: { leg: Leg }) {
   return (
@@ -129,6 +160,11 @@ export function ResearchStack() {
           <Band leg={leg} key={leg.id} />
         ))}
       </div>
+      {standaloneLegs.map((leg) => (
+        <div className="stack-standalone" key={leg.id}>
+          <Band leg={leg} />
+        </div>
+      ))}
     </>
   );
 }

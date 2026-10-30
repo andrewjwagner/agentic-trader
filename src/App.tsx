@@ -402,7 +402,11 @@ export function App({ marks }: Props) {
                 as a physical dependency chain: robotics rides on the compute
                 it depends on, which depends on the power grid at the
                 foundation. The fourth, security, cuts across all three rather
-                than sitting on top of any one of them. Tickers are
+                than sitting on top of any one of them. A fifth leg,
+                biotech &amp; healthcare, runs on a different mechanism
+                entirely — AI model capability reducing drug-discovery cost
+                and improving early trial outcomes — so it's shown separately
+                below rather than forced into the physical stack. Tickers are
                 illustrative examples of each theme (now 10 per leg, including
                 2–3 ETFs), not a screened or scored list.
               </p>
