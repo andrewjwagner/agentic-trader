@@ -610,6 +610,11 @@ table.book tr:hover td {
   color: var(--accent);
 }
 
+.pill-safety-net {
+  border-color: rgba(100, 116, 139, 0.35);
+  color: var(--ink-soft);
+}
+
 .delta {
   font-weight: 500;
 }

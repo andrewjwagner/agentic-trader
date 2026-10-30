@@ -26,7 +26,19 @@ interface SortState {
 }
 
 function sleeveLabel(sleeve: string): string {
-  return sleeve === "politician" ? "Political" : "Core";
+  if (sleeve === "politician") return "Political";
+  if (sleeve === "safety-net") return "Safety-net";
+  return "Core";
+}
+
+function SleevePill({ sleeve }: { sleeve: string }) {
+  if (sleeve === "politician") {
+    return <span className="pill pill-politician">Political</span>;
+  }
+  if (sleeve === "safety-net") {
+    return <span className="pill pill-safety-net">Safety-net</span>;
+  }
+  return <span className="pill">Core</span>;
 }
 
 function compareValues(a: string | number | null, b: string | number | null, dir: SortDir) {
@@ -214,11 +226,7 @@ function ActiveMonthTable({
                 </div>
               </td>
               <td>
-                {p.sleeve === "politician" ? (
-                  <span className="pill pill-politician">Political</span>
-                ) : (
-                  <span className="pill">Core</span>
-                )}
+                <SleevePill sleeve={p.sleeve} />
               </td>
               <td className="num">{formatShares(p.shares)}</td>
               <td className="num">{formatMoney(p.entryPrice)}</td>
@@ -339,11 +347,7 @@ function ClosedMonthTable({ month }: { month: MonthBook }) {
                 </div>
               </td>
               <td>
-                {pick.sleeve === "politician" ? (
-                  <span className="pill pill-politician">Political</span>
-                ) : (
-                  <span className="pill">Core</span>
-                )}
+                <SleevePill sleeve={pick.sleeve} />
               </td>
               <td className="num">{formatShares(pick.shares)}</td>
               <td className="num">{formatMoney(pick.entryPrice)}</td>
@@ -398,7 +402,8 @@ function MonthBlock({
           )}
         </span>
         <span className="month-summary-meta">
-          {month.picks.length} picks
+          {month.picks.filter((p) => p.sleeve !== "safety-net").length} picks
+          {month.picks.some((p) => p.sleeve === "safety-net") ? " + safety-net" : ""}
           {month.summary ? ` · ${month.summary}` : ""}
         </span>
       </summary>
