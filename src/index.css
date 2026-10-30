@@ -439,9 +439,60 @@ section {
 
 /* ——— Tables ——— */
 .table-wrap {
+  position: relative;
   overflow-x: auto;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.table-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 3px;
+}
+
+/* Table is wider than the viewport below ~720px (table.book's min-width) — the
+   table already scrolls horizontally, but without a visual cue it just looks
+   cut off. This fade + hint makes the overflow obvious on narrow screens. */
+@media (max-width: 760px) {
+  .table-wrap {
+    scroll-snap-type: x proximity;
+  }
+
+  .table-wrap::after {
+    content: "";
+    position: sticky;
+    top: 0;
+    right: 0;
+    display: block;
+    width: 28px;
+    height: 100%;
+    margin-left: -28px;
+    pointer-events: none;
+    background: linear-gradient(to right, transparent, rgba(20, 33, 43, 0.16));
+  }
+
+  table.book tr:first-child {
+    scroll-snap-align: start;
+  }
+
+  .month-body .table-wrap::before {
+    content: "swipe to see more →";
+    position: sticky;
+    left: 0;
+    display: block;
+    width: fit-content;
+    padding: 0.3rem 0.65rem 0;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
 }
 
 table.book {
